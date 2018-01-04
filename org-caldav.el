@@ -804,7 +804,9 @@ If RESUME is non-nil, try to resume."
       (dolist (filename (append org-caldav-files
                                 (list (org-caldav-inbox-file org-caldav-inbox))))
         (when (not (file-exists-p filename))
-          (user-error "File %s does not exist" filename)))
+          (if (yes-or-no-p (format "File %s does not exist, create it?" filename))
+              (write-region "" nil filename)
+            (user-error "File %s does not exist" filename))))
       ;; Check if we need to do OAuth2
       (when (org-caldav-use-oauth2)
         ;; We need to do oauth2. Check if it is available.
