@@ -2,7 +2,8 @@
 
 Caldav sync for Emacs Orgmode
 
-**org-caldav version**: (no version number given), date 2018-08-30.
+**org-caldav version**: (no official version number yet), date
+  2018-08-30.
 
 **Minimum Emacs version needed**: 24.3.
 
@@ -507,8 +508,8 @@ have a stable todo handling.
   synchronously.
 
 * Pretty much everything besides SUMMARY, DESCRIPTION and time is
-  ignored in iCalendar (like 'LOCATION', for instance). LOCATION works
-  for google calendar, though.
+  ignored in iCalendar (like 'LOCATION', for instance). LOCATION has
+  been reported to work for google calendar, though.
 
 * When trying to sync todo entries org-mode's export to ical can create empty
   entries.  org-caldav tries to sync this, which results in errors.
