@@ -1294,6 +1294,14 @@ property."
       (org-set-property "LOCATION" newlocation)
     (org-delete-property "LOCATION")))
 
+(defun org-caldav-change-class (newclass)
+  "Change the CLASS property from ORG item under point to
+NEWCLASS. If newclass is \"\", removes the class
+property."
+  (if (> (length newclass) 0)
+      (org-set-property "CLASS" newclass)
+    (org-delete-property "CLASS")))
+
 (defun org-caldav-change-timestamp (newtime)
   "Change timestamp from Org item under point to NEWTIME.
 Return symbol 'orgsexp if this entry cannot be changed because it
@@ -1520,14 +1528,15 @@ Do nothing if LEVEL is larger than `org-caldav-debug-level'."
                       (point-min))))
 
 (defun org-caldav-insert-org-entry (start-d start-t end-d end-t
-                                            summary description location
+                                            summary description location class
                                             &optional uid level)
   "Insert org block from given data at current position.
 START/END-D: Start/End date.  START/END-T: Start/End time.
-SUMMARY, DESCRIPTION, LOCATION, UID: obvious.
+SUMMARY, DESCRIPTION, LOCATION, CLASS, UID: obvious.
 Dates must be given in a format `org-read-date' can parse.
 
 If LOCATION is \"\", no LOCATION: property is written.
+If CLASS is \"\", no CLASS: property is written.
 If UID is nil, no UID: property is written.
 If LEVEL is nil, it defaults to 1.
 
@@ -1543,6 +1552,9 @@ Returns MD5 from entry."
   (if (> (length location) 0)
       (org-set-property "LOCATION" location)
     (org-delete-property "LOCATION"))
+  (if (> (length class) 0)
+      (org-set-property "CLASS" class)
+    (org-delete-property "CLASS"))
   (org-set-tags-to org-caldav-select-tags)
   (md5 (buffer-substring-no-properties
         (org-entry-beginning-position)
@@ -1550,11 +1562,11 @@ Returns MD5 from entry."
 
 ;; copy from org-caldav-insert-org-entry, and adjusted to vtodo
 (defun org-caldav-insert-org-todo (start-d start-t due-d due-t
-                                    priority percent-complete
-                                    summary description
-                                    completed-d completed-t
-                                    categories
-                                    &optional uid level)
+                                           priority percent-complete
+                                           summary description
+                                           completed-d completed-t
+                                           categories
+                                           &optional uid level)
   "Insert org block from given data at current position.
 START/DUE-D: Start/Due date.  START/DUE-T: Start/Due time.
 PRIORITY: 0-9, PERCENT-COMPLETE: 0-100.
@@ -1620,7 +1632,7 @@ Returns MD5 from entry."
         ;; Sync timestamp
         (setq timesync
               (org-caldav-change-timestamp
-		           (apply 'org-caldav-create-time-range (seq-take eventdata 4)))))
+               (apply 'org-caldav-create-time-range (seq-take eventdata 4)))))
       (when (eq org-caldav-sync-changes-to-org 'all)
         ;; Sync everything, so first remove the old one.
         (let ((level (org-current-level)))
@@ -1927,7 +1939,7 @@ If COMPLEMENT is non-nil, return all item without errors."
 ;; The LOCATION property is added the extracted list
 (defun org-caldav-convert-event ()
   "Convert icalendar event in current buffer.
-Returns a list '(start-d start-t end-d end-t summary description location)'
+Returns a list '(start-d start-t end-d end-t summary description location class)'
 which can be fed into `org-caldav-insert-org-entry'."
   (let ((decoded (decode-coding-region (point-min) (point-max) 'utf-8 t)))
     (erase-buffer)
@@ -1970,6 +1982,9 @@ which can be fed into `org-caldav-insert-org-entry'."
          (location (icalendar--convert-string-for-import
                     (or (icalendar--get-event-property e 'LOCATION)
                         "")))
+         (class (icalendar--convert-string-for-import
+                 (or (icalendar--get-event-property e 'CLASS)
+                     "")))
          (rrule (icalendar--get-event-property e 'RRULE))
          (rdate (icalendar--get-event-property e 'RDATE))
          (duration (icalendar--get-event-property e 'DURATION)))
@@ -2011,7 +2026,7 @@ which can be fed into `org-caldav-insert-org-entry'."
     ;; Return result
     (list start-d start-t
           (if end-t end-d end-1-d)
-          end-t summary description location)))
+          end-t summary description location class)))
 
 (defun org-caldav--icalendar--all-todos (icalendar)
   "Return the list of all existing todos in the given ICALENDAR."
