@@ -1183,6 +1183,9 @@ returned as a cons (POINT . LEVEL)."
                cur (string-to-number (match-string 1)))))
           (when vevent
             (setq eventdata (org-caldav-convert-event)))
+          (dolist (orgfile orgfiles)
+            (with-current-buffer (org-get-agenda-file-buffer orgfile)
+              (org-caldav-create-uid orgfile t)))
           (when vtodo
             (setq tododata (org-caldav-convert-todo))
             (org-caldav-debug-print 2 tododata))
@@ -1362,6 +1365,26 @@ time, and we ask the user to fix that."
                                                             (replace-regexp-in-string " [0-2][0-9]:[0-5][0-9]" "" sched))))))))
    nil orgfiles))
 
+(defun org-caldav-create-uid (file &optional bell)
+  "Set ID property on headlines missing it in FILE.
+When optional argument BELL is non-nil, inform the user with
+a message if the file was modified. This func is the same as
+org-icalendar-create-uid except that it ignores entries that
+match org-caldav-skip-conditions."
+  (let (modified-flag)
+    (org-map-entries
+     (lambda ()
+       (let ((entry (org-element-at-point)))
+         (unless (org-element-property :ID entry)
+           (unless (apply 'org-agenda-skip-entry-if org-caldav-skip-conditions)
+             (org-id-get-create)
+             (setq modified-flag t)
+             (forward-line)))))
+     nil nil 'comment)
+    (when (and bell modified-flag)
+      (message "ID properties created in file \"%s\"" file)
+      (sit-for 2))))
+
 (defun org-caldav-generate-ics ()
   "Generate ICS file from `org-caldav-files'.
 Returns buffer containing the ICS file."
@@ -1376,8 +1399,8 @@ Returns buffer containing the ICS file."
                               (list inbox-file)))))
         (org-export-select-tags org-caldav-select-tags)
         (org-icalendar-exclude-tags org-caldav-exclude-tags)
-        ;; We absolutely need UIDs for synchronization.
-        (org-icalendar-store-UID t)
+        ;; We create UIDs ourselves and do not rely on ox-icalendar.el
+        (org-icalendar-store-UID nil)
         ;; Does not work yet
         (org-icalendar-include-bbdb-anniversaries nil)
         (icalendar-uid-format "orgsexp-%h")
