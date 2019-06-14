@@ -176,7 +176,7 @@ changes. See the variable `org-caldav-backup-file` for details.
 A special case are sexp entries like
 
     %%(diary-anniversary  2 2 1969) Foo's birthday
-    
+
     * Regular meeting
       <%%(diary-float t 4 2)>
 
@@ -409,7 +409,7 @@ the use of downloaded vtodo events to import it to the `inbox`.
 It is also a good idea to set
 
     (setq org-icalendar-categories '(local-tags))
-    
+
 so the tags on the nextcloud will not include the local category.  If you need
 that, leave a message.  On cal->org this would add it to the tags.
 
