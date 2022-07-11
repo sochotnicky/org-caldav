@@ -1030,6 +1030,7 @@ This is a bug in older Org versions."
                  (save-excursion
                    (goto-char (point-min))
                    (org-id-goto (org-caldav-get-uid))
+                   (narrow-to-defun)
                    (if (re-search-forward org-priority-regexp nil t)
                        (let ((prio (org-entry-get nil "PRIORITY")))
                          (dolist (pri org-caldav-todo-priority r)
